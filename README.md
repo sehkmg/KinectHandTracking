@@ -5,3 +5,10 @@ Extract opencv library to C:\ before you excute this code.
 If you want to use other versions, you should change project settings.
 
 If you want to know more about this project, please visit https://sehkmg.blogspot.kr/2017/09/kinect-hand-tracking.html.
+
+# Reference
+[1] http://www.wseas.us/e-library/conferences/2011/Mexico/CEMATH/CEMATH-20.pdf
+[2] http://anikettatipamula.blogspot.kr/2012/02/hand-gesture-using-opencv.html
+
+# License
+MIT
