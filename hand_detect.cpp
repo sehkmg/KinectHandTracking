@@ -1,5 +1,4 @@
 #include "opencv2/imgproc.hpp"
-#include "opencv2/videoio.hpp"
 #include "opencv2/highgui.hpp"
 #include <stdio.h>
 #include <string>
@@ -8,34 +7,14 @@ using namespace cv;
 
 void detect(Mat img_8uc1, Mat img_8uc3);
 
-static void help()
-{
-	printf("\n"
-		"This program demonstrated a simple method of connected components clean up of background subtraction\n"
-		"When the program starts, it begins learning the background.\n"
-		"You can toggle background learning on and off by hitting the space bar.\n"
-		"Call\n"
-		"./segment_objects [video file, else it reads camera 0]\n\n");
-}
-
-int main(int argc, char** argv)
+int main()
 {
 	VideoCapture cap;
-	bool update_bg_model = true;
-	CommandLineParser parser(argc, argv, "{help h||}{@input||}");
-	if (parser.has("help"))
-	{
-		help();
-		return 0;
-	}
-	string input = parser.get<std::string>("@input");
-	if (input.empty())
-		cap.open(0);
-	else
-		cap.open(input);
+	cap.open(0);
+
 	if (!cap.isOpened())
 	{
-		printf("\nCan not open camera or video file\n");
+		printf("\nCan not open camera\n");
 		return -1;
 	}
 	Mat tmp_frame, ycc_frame, out_frame, bwImage;
@@ -54,9 +33,14 @@ int main(int argc, char** argv)
 		if (tmp_frame.empty())
 			break;
 
+		//change frame to black/white
+		//skin color->white, background->black
 		cvtColor(tmp_frame, ycc_frame, CV_BGR2YCrCb);
 		inRange(ycc_frame, Scalar(0, 133, 77), Scalar(255, 173, 127), out_frame);
 
+		//out_frame: black/white image
+		//tmp_frame: original image
+		//detect function draws boundaries to original image by using black/white image
 		detect(out_frame, tmp_frame);
 
 		imshow("video", tmp_frame);
@@ -75,10 +59,12 @@ void  detect(Mat img_8uc1, Mat img_8uc3)
 	double area = 0, areamax = 0;
 	int maxn = 0;
 
+	//find contours in black/white image
 	findContours(img_8uc1, contours, CV_RETR_LIST, CV_CHAIN_APPROX_NONE);
 
 	if (contours.size() > 0)
 	{
+		//choose the contour that has max area
 		for (int i = 0; i < contours.size(); i++)
 		{
 			area = contourArea(contours[i]);
@@ -93,13 +79,16 @@ void  detect(Mat img_8uc1, Mat img_8uc3)
 		
 		if (areamax>5000)
 		{
+			//approximate the contour to polygon
 			approxPolyDP(maxitem, maxitem, 10, 1);
 
 			vector<int> hull;
 			vector<Vec4i> defects;
 
+			//find convex hull
 			convexHull(maxitem, hull, false, true);
 			
+			//find convexity defects
 			convexityDefects(maxitem, hull, defects);
 
 			// This cycle marks all defects of convexity of current contours.  
